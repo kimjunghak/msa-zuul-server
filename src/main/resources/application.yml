@@ -5,29 +5,55 @@ spring:
   application:
     name: msa-zuul-server
 
+  config:
+    import: "optional:configserver:"
+
   cloud:
     config:
       uri: http://localhost:8888
       name: msa-architecture-config-server
 
-  config:
-    import: "optional:configserver:"
+# zuul -> spring cloud gateway ??
+    gateway:
+      routes:
+        - id: coffeeMember
+          uri: lb://msa-service-coffee-member
+          predicates:
+            - Path=/member/**
+          filters:
+            - RewritePath=/member/(?<segment>.*), /$\{segment} # /member/1 -> /1
+        - id: coffeeOrder
+          uri: lb://msa-service-coffee-order
+          predicates:
+            - Path=/order/**
+          filters:
+            - RewritePath=/order/(?<segment>.*), /$\{segment}
+        - id: coffeeStatus
+          uri: lb://msa-service-coffee-status
+          predicates:
+            - Path=/status/**
+          filters:
+            - RewritePath=/status/(?<segment>.*), /$\{segment}
 
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:9091/eureka/
 
-zuul:
-  routes:
-    coffeeOrder:
-      path: /coffeeOrder/**
-      service-id: msa-service-coffee-order
+#zuul:
+#  routes:
+#    coffeeOrder:
+#      path: /order/**
+#      service-id: msa-service-coffee-order
+#      strip-prefix: false
+#
+#    coffeeMember:
+#      path: /member/**
+#      service-id: msa-service-coffee-member
+#      strip-prefix: false
+#
+#    coffeeStatus:
+#      path: /status/**
+#      service-id: msa-service-coffee-status
+#      strip-prefix: false
 
-    coffeeMember:
-      path: /coffeeMember/**
-      service-id: msa-service-coffee-member
-
-    coffeeStatus:
-      path: /coffeeStatus/**
-      service-id: msa-service-coffee-status
